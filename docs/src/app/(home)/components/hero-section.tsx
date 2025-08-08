@@ -103,11 +103,11 @@ export function HeroSection() {
                             <TextGenerateEffect words="PoloCloud" />
                         </h1>
 
-                        <p className={`text-xl md:text-2xl lg:text-3xl text-muted-foreground mb-16 max-w-4xl mx-auto lg:mx-0 leading-relaxed font-light transition-all duration-1000 delay-400 ${
+                        <p className={`text-base md:text-lg lg:text-xl text-muted-foreground mb-16 max-w-4xl mx-auto lg:mx-0 leading-relaxed font-light transition-all duration-1000 delay-400 ${
                             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                         }`}>
                             Deploy and manage your Minecraft servers with ease.
-                            <span className="block mt-2 text-lg md:text-xl lg:text-2xl font-normal">
+                            <span className="block mt-2 text-sm md:text-base lg:text-lg font-normal">
                 Built for performance, designed for simplicity.
               </span>
                         </p>

@@ -167,95 +167,94 @@ export function CompatibilityTable() {
             isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-16'
         }`}>
             <div className="bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden dark:shadow-[0_0_50px_rgba(0,120,255,0.15)] shadow-[0_0_50px_rgba(0,120,255,0.1)] ring-1 ring-white/20 dark:ring-white/10">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                        <tr className={`border-b border-white/10 dark:border-white/5 transition-all duration-500 delay-200 ${
-                            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                        }`}>
-                            <th className="px-6 py-5 text-left font-semibold text-foreground min-w-[140px] dark:text-white/90 bg-white/5 dark:bg-white/5">
-                                Platform
+                
+                <table className="w-full">
+                    <thead>
+                    <tr className={`border-b border-white/10 dark:border-white/5 transition-all duration-500 delay-200 ${
+                        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                    }`}>
+                        <th className="px-6 py-5 text-left font-semibold text-foreground min-w-[140px] dark:text-white/90 bg-white/5 dark:bg-white/5">
+                            Platform
+                        </th>
+                        {platforms.map((platform, index) => (
+                            <th key={platform} className={`px-4 py-5 text-center font-semibold text-foreground border-l border-white/10 dark:border-white/5 dark:text-white/90 bg-white/5 dark:bg-white/5 transition-all duration-500 delay-${300 + index * 50}`}>
+                                <div className={`flex items-center justify-center gap-2 transition-all duration-500 delay-${400 + index * 50} ${
+                                    isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                                }`}>
+                                    <PlatformIcon platform={platform} />
+                                    <span>{platform}</span>
+                                </div>
                             </th>
-                            {platforms.map((platform, index) => (
-                                <th key={platform} className={`px-4 py-5 text-center font-semibold text-foreground border-l border-white/10 dark:border-white/5 dark:text-white/90 bg-white/5 dark:bg-white/5 transition-all duration-500 delay-${300 + index * 50}`}>
-                                    <div className={`flex items-center justify-center gap-2 transition-all duration-500 delay-${400 + index * 50} ${
-                                        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                                    }`}>
-                                        <PlatformIcon platform={platform} />
-                                        <span>{platform}</span>
-                                    </div>
-                                </th>
-                            ))}
-                        </tr>
-                        </thead>
-
-                        <tbody>
-                        <tr className={`border-b border-white/10 dark:border-white/5 transition-all duration-500 delay-400 ${
-                            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                        }`}>
-                            <td className="px-6 py-4 text-left font-bold text-foreground bg-white/10 dark:bg-white/10 dark:text-white/80">
-                                Version support
-                            </td>
-                            {platforms.map((platform) => (
-                                <td key={platform} className="px-4 py-4 text-center border-l border-white/10 dark:border-white/5 bg-white/10 dark:bg-white/10">
-                                </td>
-                            ))}
-                        </tr>
-
-                        {versionColumns.map((version, index) => (
-                            <tr key={version} className={`border-b border-white/10 dark:border-white/5 transition-all duration-500 delay-${500 + index * 100} ${
-                                index % 2 === 0 ? 'bg-transparent' : 'bg-white/5 dark:bg-white/5'
-                            } ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                                <td className="px-6 py-4 text-left font-medium text-muted-foreground pl-8 dark:text-white/70">
-                                    {version}
-                                </td>
-                                {platforms.map((platform) => {
-                                    const data = compatibilityData.find(d => d.platform === platform);
-                                    return (
-                                        <td key={platform} className="px-4 py-4 text-center border-l border-white/10 dark:border-white/5">
-                                            <div className="flex justify-center">
-                                                <StatusIcon status={data?.[version as keyof CompatibilityData] as 'supported' | 'not-supported' | 'partial' | 'not-possible'} />
-                                            </div>
-                                        </td>
-                                    );
-                                })}
-                            </tr>
                         ))}
+                    </tr>
+                    </thead>
 
-                        <tr className={`border-b border-white/10 dark:border-white/5 transition-all duration-500 delay-900 ${
-                            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                        }`}>
-                            <td className="px-6 py-4 text-left font-bold text-foreground bg-white/10 dark:bg-white/10 dark:text-white/80">
-                                Addons
+                    <tbody>
+                    <tr className={`border-b border-white/10 dark:border-white/5 transition-all duration-500 delay-400 ${
+                        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                    }`}>
+                        <td className="px-6 py-4 text-left font-bold text-foreground bg-white/10 dark:bg-white/10 dark:text-white/80">
+                            Version support
+                        </td>
+                        {platforms.map((platform) => (
+                            <td key={platform} className="px-4 py-4 text-center border-l border-white/10 dark:border-white/5 bg-white/10 dark:bg-white/10">
                             </td>
-                            {platforms.map((platform) => (
-                                <td key={platform} className="px-4 py-4 text-center border-l border-white/10 dark:border-white/5 bg-white/10 dark:bg-white/10">
-                                </td>
-                            ))}
-                        </tr>
-
-                        {addonColumns.map((addon, index) => (
-                            <tr key={addon} className={`border-b border-white/10 dark:border-white/5 transition-all duration-500 delay-${1000 + index * 100} ${
-                                index % 2 === 0 ? 'bg-transparent' : 'bg-white/5 dark:bg-white/5'
-                            } ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                                <td className="px-6 py-4 text-left font-medium text-muted-foreground pl-8 dark:text-white/70">
-                                    {addon}
-                                </td>
-                                {platforms.map((platform) => {
-                                    const data = compatibilityData.find(d => d.platform === platform);
-                                    return (
-                                        <td key={platform} className="px-4 py-4 text-center border-l border-white/10 dark:border-white/5">
-                                            <div className="flex justify-center">
-                                                <StatusIcon status={data?.[addon as keyof CompatibilityData] as 'supported' | 'not-supported' | 'partial' | 'not-possible'} />
-                                            </div>
-                                        </td>
-                                    );
-                                })}
-                            </tr>
                         ))}
-                        </tbody>
-                    </table>
-                </div>
+                    </tr>
+
+                    {versionColumns.map((version, index) => (
+                        <tr key={version} className={`border-b border-white/10 dark:border-white/5 transition-all duration-500 delay-${500 + index * 100} group hover:bg-white/5 dark:hover:bg-white/5 ${
+                            index % 2 === 0 ? 'bg-transparent' : 'bg-white/5 dark:bg-white/5'
+                        } ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                            <td className="px-6 py-4 text-left font-medium text-muted-foreground pl-8 dark:text-white/70 group-hover:text-foreground dark:group-hover:text-white transition-colors duration-200">
+                                {version}
+                            </td>
+                            {platforms.map((platform) => {
+                                const data = compatibilityData.find(d => d.platform === platform);
+                                return (
+                                    <td key={platform} className="px-4 py-4 text-center border-l border-white/10 dark:border-white/5 group-hover:bg-white/5 dark:group-hover:bg-white/5 transition-colors duration-200">
+                                        <div className="flex justify-center">
+                                            <StatusIcon status={data?.[version as keyof CompatibilityData] as 'supported' | 'not-supported' | 'partial' | 'not-possible'} />
+                                        </div>
+                                    </td>
+                                );
+                            })}
+                        </tr>
+                    ))}
+
+                    <tr className={`border-b border-white/10 dark:border-white/5 transition-all duration-500 delay-900 ${
+                        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                    }`}>
+                        <td className="px-6 py-4 text-left font-bold text-foreground bg-white/10 dark:bg-white/10 dark:text-white/80">
+                            Addons
+                        </td>
+                        {platforms.map((platform) => (
+                            <td key={platform} className="px-4 py-4 text-center border-l border-white/10 dark:border-white/5 bg-white/10 dark:bg-white/10">
+                            </td>
+                        ))}
+                    </tr>
+
+                    {addonColumns.map((addon, index) => (
+                        <tr key={addon} className={`border-b border-white/10 dark:border-white/5 transition-all duration-500 delay-${1000 + index * 100} group hover:bg-white/5 dark:hover:bg-white/5 ${
+                            index % 2 === 0 ? 'bg-transparent' : 'bg-white/5 dark:bg-white/5'
+                        } ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                            <td className="px-6 py-4 text-left font-medium text-muted-foreground pl-8 dark:text-white/70 group-hover:text-foreground dark:group-hover:text-white transition-colors duration-200">
+                                {addon}
+                            </td>
+                            {platforms.map((platform) => {
+                                const data = compatibilityData.find(d => d.platform === platform);
+                                return (
+                                    <td key={platform} className="px-4 py-4 text-center border-l border-white/10 dark:border-white/5 group-hover:bg-white/5 dark:group-hover:bg-white/5 transition-colors duration-200">
+                                        <div className="flex justify-center">
+                                            <StatusIcon status={data?.[addon as keyof CompatibilityData] as 'supported' | 'not-supported' | 'partial' | 'not-possible'} />
+                                        </div>
+                                    </td>
+                                );
+                            })}
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
 
                 <div className={`px-6 py-4 bg-white/10 dark:bg-white/10 border-t border-white/20 dark:border-white/10 transition-all duration-500 delay-1200 ${
                     isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
