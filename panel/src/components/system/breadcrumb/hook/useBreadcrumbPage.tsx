@@ -1,16 +1,17 @@
 import useBreadcrumbStore, {
-  BreadcrumbItem,
+    BreadcrumbItem,
 } from '@/components/system/breadcrumb/hook/useBreadcrumbStore';
-import { useEffect } from 'react';
+import {useEffect} from 'react';
 
 interface BreadcrumbPageProps {
-  items?: BreadcrumbItem[];
-  reset?: boolean;
+    items?: BreadcrumbItem[];
+    reset?: boolean;
 }
-export const useBreadcrumbPage = ({ items }: BreadcrumbPageProps) => {
-  const { initializePage } = useBreadcrumbStore();
-  useEffect(() => {
-    initializePage(items || []);
-  }, []);
-  return {};
+
+export const useBreadcrumbPage = ({items}: BreadcrumbPageProps) => {
+    const {initializePage} = useBreadcrumbStore();
+    useEffect(() => {
+        initializePage(items || []);
+    }, []);
+    return {};
 };
