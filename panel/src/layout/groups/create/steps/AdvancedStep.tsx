@@ -1,201 +1,241 @@
-import { Button } from '@/components/ui/button';
+import {Button} from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { CreateGroupObject } from '@/layout/groups/create/CreateGroupLayout';
-import useCreateClusterGroup from '@/lib/hooks/api/useCreateClusterGroup';
-import { SetupStepProps } from '@/lib/steps/SetupStepProps';
-import { HardDrive, Maximize2, Minimize2, Shield } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { useLocation } from 'wouter';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Switch} from '@/components/ui/switch';
+import {CreateGroupObject} from '@/layout/groups/create/CreateGroupLayout';
+import {SetupStepProps} from '@/layout/groups/create/CreateGroupLayout';
+import {Loader2} from 'lucide-react';
+import {useState} from 'react';
 
 export const AdvancedStep: React.FC<SetupStepProps<CreateGroupObject>> = ({
-  isOnFocus,
-  object,
-  setObject,
-}) => {
-  const [, setLocation] = useLocation();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { mutateAsync } = useCreateClusterGroup();
+                                                                              isOnFocus,
+                                                                              object,
+                                                                              setObject,
+                                                                              onCreateGroup,
+                                                                          }) => {
+    const [isCreating, setIsCreating] = useState(false);
 
-  function onSubmit() {
-    toast.promise(
-      async () =>
-        mutateAsync({
-          fallback: object.fallback,
-          maxMemory: object.maxMemory,
-          maxOnlineServices: object.maxOnlineServices,
-          minOnlineServices: object.minOnlineServices,
-          name: object.name,
-          platform: object.platform || '',
-          staticService: object.staticService,
-          version: object.version || '',
-        }),
-      {
-        loading: 'Creating Group...',
-        success: () => {
-          setLocation('/groups');
-          return 'Group created successfully';
-        },
-        error: (error) => {
-          console.log(error.response.data);
+    const isServicesValid = (object.minOnlineServices || 0) <= (object.maxOnlineServices || 0);
 
-          if (error.response?.data?.errorCode === 'group/alreadyExists') {
-            return 'This group already exists. Please choose a different name.';
-          }
+    const isFormValid = object.name &&
+        object.platform &&
+        object.version &&
+        object.maxMemory > 0 &&
+        isServicesValid;
 
-          return 'Failed to create Group';
-        },
-        finally: () => setIsProcessing(false),
-      }
-    );
-  }
+    const handleCreateGroup = async () => {
+        if (!onCreateGroup) return;
 
-  return (
-    <Card
-      className="aria-disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:cursor-not-allowed bg-primary-foreground transition-all"
-      aria-disabled={!isOnFocus}
-    >
-      <CardHeader>
-        <CardTitle>Advanced Settings</CardTitle>
-        <CardDescription>
-          Here you can enable or disable advanced settings for your Group.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col space-y-2">
-        <Card className="p-6">
-          <div className="flex flex-row items-center justify-between">
-            <div className="flex flex-row items-center space-x-2">
-              <div className="min-w-12 flex items-center justify-center">
-                <HardDrive className="size-10" />
-              </div>
-              <div>
-                <div className="flex flex-row items-center space-x-2">
-                  <p className="text-lg font-semibold">Static Service</p>
-                </div>
-                <p className="text-muted-foreground text-sm">
-                  Static services are not reset on a restart.
-                </p>
-              </div>
-            </div>
-            <div className="px-4 scale-125 transform-gpu">
-              <Switch
-                checked={object.staticService}
-                onCheckedChange={(checked) =>
-                  setObject({ ...object, staticService: checked })
-                }
-              />
-            </div>
-          </div>
-        </Card>
-        {object.fallbackAvailable && (
-          <Card className="p-6">
-            <div className="flex flex-row items-center justify-between">
-              <div className="flex flex-row items-center space-x-2">
-                <div className="min-w-12 flex items-center justify-center">
-                  <Shield className="size-10" />
-                </div>
-                <div>
-                  <div className="flex flex-row items-center space-x-2">
-                    <p className="text-lg font-semibold">Fallback Group</p>
-                  </div>
-                  <p className="text-muted-foreground text-sm">
-                    This group will be used as default group on join.
-                  </p>
-                </div>
-              </div>
-              <div className="px-4 scale-125 transform-gpu">
-                <Switch
-                  checked={object.fallback}
-                  onCheckedChange={(checked) =>
-                    setObject({ ...object, fallback: checked })
-                  }
-                />
-              </div>
-            </div>
-          </Card>
-        )}
-        <Card className="p-6">
-          <div className="flex flex-row items-center justify-between">
-            <div className="flex flex-row items-center space-x-2">
-              <div className="min-w-12 flex items-center justify-center">
-                <Minimize2 className="size-10" />
-              </div>
-              <div>
-                <div className="flex flex-row items-center space-x-2">
-                  <p className="text-lg font-semibold">Minimal service count</p>
-                </div>
-                <p className="text-muted-foreground text-sm">
-                  How many service should be minimal online?
-                </p>
-              </div>
-            </div>
-            <div className="px-4 scale-125 transform-gpu">
-              <Input
-                type="number"
-                min={1}
-                max={100}
-                defaultValue={1}
-                value={object.minOnlineServices}
-                onChange={(e) =>
-                  setObject({
-                    ...object,
-                    minOnlineServices: parseInt(e.target.value),
-                  })
-                }
-              />
-            </div>
-          </div>
-        </Card>
-        <Card className="p-6">
-          <div className="flex flex-row items-center justify-between">
-            <div className="flex flex-row items-center space-x-2">
-              <div className="min-w-12 flex items-center justify-center">
-                <Maximize2 className="size-10" />
-              </div>
-              <div>
-                <div className="flex flex-row items-center space-x-2">
-                  <p className="text-lg font-semibold">Maximal service count</p>
-                </div>
-                <p className="text-muted-foreground text-sm">
-                  How many service should be maximal online?
-                </p>
-              </div>
-            </div>
-            <div className="px-4 scale-125 transform-gpu">
-              <Input
-                type="number"
-                min={1}
-                max={100}
-                defaultValue={1}
-                value={object.maxOnlineServices}
-                onChange={(e) =>
-                  setObject({
-                    ...object,
-                    maxOnlineServices: parseInt(e.target.value),
-                  })
-                }
-              />
-            </div>
-          </div>
-        </Card>
-      </CardContent>
-      <CardFooter className="border-t px-6 py-4">
-        <Button
-          disabled={object.maxMemory == undefined || !isOnFocus || isProcessing}
-          onClick={onSubmit}
+        setIsCreating(true);
+
+        try {
+            await onCreateGroup();
+        } catch (error) {
+
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    return (
+        <Card
+            className={`transition-all ${
+                !isOnFocus ? 'opacity-50 pointer-events-none' : ''
+            }`}
         >
-          Create
-        </Button>
-      </CardFooter>
-    </Card>
-  );
+            <CardHeader>
+                <CardTitle>Advanced Settings</CardTitle>
+                <CardDescription>
+                    Configure advanced settings for your Group.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+                <div className="space-y-4">
+                    <Label className="text-base font-semibold">Service Management</Label>
+
+                    <div className="space-y-3">
+                        <Label className="text-sm font-medium text-muted-foreground">Percentage to Start New
+                            Service</Label>
+                        <Input
+                            type="number"
+                            placeholder="Enter percentage (0-100)"
+                            value={object.percentageToStart || ''}
+                            onChange={(e) => setObject({...object, percentageToStart: parseInt(e.target.value) || 0})}
+                            min="0"
+                            max="100"
+                            className="h-11 text-center text-lg font-medium"
+                        />
+                        <p className="text-xs text-muted-foreground text-center">
+                            When to automatically start a new service instance
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-3">
+                                <Label className="text-sm font-medium text-muted-foreground">Min Online Services</Label>
+                                <Input
+                                    type="number"
+                                    placeholder="Min services"
+                                    value={object.minOnlineServices || ''}
+                                    onChange={(e) => {
+                                        const minServices = parseInt(e.target.value) || 0;
+                                        if (minServices <= (object.maxOnlineServices || 0)) {
+                                            setObject({...object, minOnlineServices: minServices});
+                                        }
+                                    }}
+                                    min="0"
+                                    max={object.maxOnlineServices || 999}
+                                    className="h-11 text-center text-lg font-medium"
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <Label className="text-sm font-medium text-muted-foreground">Max Online Services</Label>
+                                <Input
+                                    type="number"
+                                    placeholder="Max services"
+                                    value={object.maxOnlineServices || ''}
+                                    onChange={(e) => {
+                                        const maxServices = parseInt(e.target.value) || 0;
+                                        let newMinServices = object.minOnlineServices || 0;
+
+                                        if (maxServices < newMinServices) {
+                                            newMinServices = Math.max(0, maxServices);
+                                        }
+
+                                        setObject({
+                                            ...object,
+                                            maxOnlineServices: maxServices,
+                                            minOnlineServices: newMinServices
+                                        });
+                                    }}
+                                    min="0"
+                                    className="h-11 text-center text-lg font-medium"
+                                />
+                            </div>
+                        </div>
+
+                        {object.minOnlineServices > 0 && object.maxOnlineServices > 0 &&
+                            object.minOnlineServices > object.maxOnlineServices && (
+                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                    <p className="text-sm text-red-500 text-center">
+                                        ⚠️ Minimum services cannot be greater than maximum services
+                                    </p>
+                                </div>
+                            )}
+
+                        {object.minOnlineServices > 0 && object.maxOnlineServices > 0 &&
+                            object.minOnlineServices <= object.maxOnlineServices && (
+                                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                                    <p className="text-sm text-blue-500 text-center">
+                                        Service range: {object.minOnlineServices} - {object.maxOnlineServices}
+                                    </p>
+                                </div>
+                            )}
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <Label className="text-base font-semibold">Templates</Label>
+                    <div className="space-y-3">
+                        <Label className="text-sm font-medium text-muted-foreground">Template Names</Label>
+                        <div className="space-y-2">
+                            {object.templates?.map((template, index) => (
+                                <div key={index} className="flex gap-2">
+                                    <Input
+                                        placeholder="Template name (e.g., lobby, survival, minigame)"
+                                        value={template}
+                                        onChange={(e) => {
+                                            const newTemplates = [...(object.templates || [])];
+                                            newTemplates[index] = e.target.value;
+                                            setObject({...object, templates: newTemplates});
+                                        }}
+                                        className="flex-1"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const newTemplates = object.templates?.filter((_, i) => i !== index) || [];
+                                            setObject({...object, templates: newTemplates});
+                                        }}
+                                        className="px-3"
+                                    >
+                                        Remove
+                                    </Button>
+                                </div>
+                            ))}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                    const newTemplates = [...(object.templates || []), ''];
+                                    setObject({...object, templates: newTemplates});
+                                }}
+                                className="w-full"
+                            >
+                                Add Template
+                            </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Add template names that this group should use. Leave empty if no templates are needed.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <Label className="text-base font-semibold">Group Behavior</Label>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="space-y-0.5">
+                                <Label className="text-sm font-medium">Static Service Group</Label>
+                                <p className="text-xs text-muted-foreground">Group runs as a static service</p>
+                            </div>
+                            <Switch
+                                checked={object.staticService || false}
+                                onCheckedChange={(checked) => setObject({...object, staticService: checked})}
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="space-y-0.5">
+                                <Label className="text-sm font-medium">Fallback Group</Label>
+                                <p className="text-xs text-muted-foreground">Group acts as fallback</p>
+                            </div>
+                            <Switch
+                                checked={object.fallback || false}
+                                onCheckedChange={(checked) => setObject({...object, fallback: checked})}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+                <Button
+                    onClick={handleCreateGroup}
+                    className="w-full"
+                    disabled={!isOnFocus || isCreating || !isFormValid}
+                >
+                    {isCreating ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                            Creating Group...
+                        </>
+                    ) : (
+                        'Create Group'
+                    )}
+                </Button>
+            </CardFooter>
+        </Card>
+    );
 };
