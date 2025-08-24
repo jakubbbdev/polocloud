@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLogsWebSocket } from '../../lib/websocket/logs/useLogsWebSocket';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { ScrollArea } from '../../components/ui/scroll-area';
 import { Wifi, WifiOff, Trash2, Download } from 'lucide-react';
-import { terminalApi } from '@/lib/api/clients/terminal/TerminalApiClient';
-import { permissionService } from '@/lib/utils/PermissionService';
+import { terminalApi } from '../../lib/api/clients/terminal/TerminalApiClient';
+import { permissionService } from '../../lib/utils/PermissionService';
 
 interface LogEntry {
     id: string;

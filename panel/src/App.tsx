@@ -1,38 +1,38 @@
-import {AppSidebar} from '@/components/app-sidebar';
-import AppBreadcrumb from '@/components/system/breadcrumb/AppBreadcrumb';
-import LoadingSpinner from '@/components/system/LoadingSpinner';
+import {AppSidebar} from './components/app-sidebar';
+import AppBreadcrumb from './components/system/breadcrumb/AppBreadcrumb';
+import LoadingSpinner from './components/system/LoadingSpinner';
 
-import {Separator} from '@/components/ui/separator';
+import {Separator} from './components/ui/separator';
 import {
     SidebarInset,
     SidebarProvider,
     SidebarTrigger,
-} from '@/components/ui/sidebar';
-import {Toaster} from '@/components/ui/sonner';
+} from './components/ui/sidebar';
+import {Toaster} from './components/ui/sonner';
 import {lazy, Suspense, useState, useEffect} from 'react';
 import {Route, Switch} from 'wouter';
-import {Badge} from '@/components/ui/badge';
+import {Badge} from './components/ui/badge';
 import {Wifi, WifiOff, Clock, Activity} from 'lucide-react';
-import {systemInformationApi} from '@/lib/api';
+import {systemInformationApi} from './lib/api';
 
 import {useSpring, animated} from '@react-spring/web';
-import {useBackendWebSocket} from '@/lib/websocket/badge/useBackendWebSocket.ts';
+import {useBackendWebSocket} from './lib/websocket/badge/useBackendWebSocket.ts';
 
-const Dashboard = lazy(() => import('@/layout/dashboard/DashboardRoute'));
-const Onboarding = lazy(() => import('@/layout/onboarding/OnboardingLayout'));
-const Login = lazy(() => import('@/layout/auth/LoginPage'));
-const RolePage = lazy(() => import('@/layout/team/RolePage'));
-const UsersPage = lazy(() => import('@/layout/users/UsersPage'));
-const GroupsPage = lazy(() => import('@/layout/groups/GroupsPage'));
-const GroupOverviewPage = lazy(() => import('@/layout/groups/GroupOverviewPage'));
-const CreateGroupLayout = lazy(() => import('@/layout/groups/create/CreateGroupLayout'));
-const EditGroupPage = lazy(() => import('@/layout/groups/edit/EditGroupPage'));
-const PlayersPage = lazy(() => import('@/layout/players/PlayersPage'));
-const PlayerDetailPage = lazy(() => import('@/layout/players/PlayerDetailPage'));
-const ServicesPage = lazy(() => import('@/layout/services/ServicesPage'));
-const ServiceScreenPage = lazy(() => import('@/layout/services/ServiceScreenPage'));
+const Dashboard = lazy(() => import('./layout/dashboard/DashboardRoute'));
+const Onboarding = lazy(() => import('./layout/onboarding/OnboardingLayout'));
+const Login = lazy(() => import('./layout/auth/LoginPage'));
+const RolePage = lazy(() => import('./layout/team/RolePage'));
+const UsersPage = lazy(() => import('./layout/users/UsersPage'));
+const GroupsPage = lazy(() => import('./layout/groups/GroupsPage'));
+const GroupOverviewPage = lazy(() => import('./layout/groups/GroupOverviewPage'));
+const CreateGroupLayout = lazy(() => import('./layout/groups/create/CreateGroupLayout'));
+const EditGroupPage = lazy(() => import('./layout/groups/edit/EditGroupPage'));
+const PlayersPage = lazy(() => import('./layout/players/PlayersPage'));
+const PlayerDetailPage = lazy(() => import('./layout/players/PlayerDetailPage'));
+const ServicesPage = lazy(() => import('./layout/services/ServicesPage'));
+const ServiceScreenPage = lazy(() => import('./layout/services/ServiceScreenPage'));
 const LogsPage = lazy(() => import('./layout/logs/LogsPage'));
-const TemplatesPage = lazy(() => import('@/layout/templates/TemplatesPage'));
+const TemplatesPage = lazy(() => import('./layout/templates/TemplatesPage'));
 
 function App() {
     const [_isOnline, setIsOnline] = useState(navigator.onLine);
