@@ -5,12 +5,13 @@ import { defineConfig, loadEnv } from 'vite';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
-    const backendProtocol = env.VITE_BACKEND_PROTOCOL || 'http' || 'https';
-    const backendIP = env.VITE_BACKEND_IP;
+    const backendProtocol = env.VITE_BACKEND_PROTOCOL || 'http';
+    const backendIP = env.VITE_BACKEND_IP || 'localhost';
     const backendPort = env.VITE_BACKEND_PORT || '8080';
     
-    if (!backendIP) {
-        throw new Error('VITE_BACKEND_IP ist erforderlich!');
+    // Only throw error in development mode
+    if (mode === 'development' && !env.VITE_BACKEND_IP) {
+        console.warn('VITE_BACKEND_IP ist nicht gesetzt, verwende localhost als Fallback');
     }
 
     return {

@@ -1,5 +1,6 @@
 export class BackendConfig {
     private static instance: BackendConfig;
+    private backendURL: string | null = null;
 
     private constructor() {}
 
@@ -28,6 +29,25 @@ export class BackendConfig {
 
     public getBackendProtocol(): string {
         return import.meta.env.VITE_BACKEND_PROTOCOL || 'http';
+    }
+
+    public getBackendConfig(): { backendURL: string } | null {
+        return this.backendURL ? { backendURL: this.backendURL } : null;
+    }
+
+    public setBackendURL(url: string): void {
+        this.backendURL = url;
+
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('backendURL', url);
+        }
+    }
+
+    public clearBackendConfig(): void {
+        this.backendURL = null;
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('backendURL');
+        }
     }
 
     public getServiceScreenWebSocketURL(serviceName: string): string {
