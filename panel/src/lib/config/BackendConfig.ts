@@ -11,11 +11,15 @@ export class BackendConfig {
     }
 
     public getBackendIP(): string {
-        return import.meta.env.VITE_BACKEND_IP;
+        const ip = import.meta.env.VITE_BACKEND_IP;
+        if (!ip) {
+            throw new Error('VITE_BACKEND_IP ist nicht gesetzt!');
+        }
+        return ip;
     }
 
     public getBackendPort(): string {
-        return import.meta.env.VITE_BACKEND_PORT;
+        return import.meta.env.VITE_BACKEND_PORT || '8080';
     }
 
     public getBackendPath(): string {
@@ -23,7 +27,7 @@ export class BackendConfig {
     }
 
     public getBackendProtocol(): string {
-        return import.meta.env.VITE_BACKEND_PROTOCOL || 'ws';
+        return import.meta.env.VITE_BACKEND_PROTOCOL || 'http';
     }
 
     public getServiceScreenWebSocketURL(serviceName: string): string {
