@@ -31,7 +31,7 @@ const PlayersPage = lazy(() => import('@/layout/players/PlayersPage'));
 const PlayerDetailPage = lazy(() => import('@/layout/players/PlayerDetailPage'));
 const ServicesPage = lazy(() => import('@/layout/services/ServicesPage'));
 const ServiceScreenPage = lazy(() => import('@/layout/services/ServiceScreenPage'));
-const LogsPage = lazy(() => import('@/layout/logs/LogsPage'));
+const LogsPage = lazy(() => import('./layout/logs/LogsPage'));
 const TemplatesPage = lazy(() => import('@/layout/templates/TemplatesPage'));
 
 function App() {
