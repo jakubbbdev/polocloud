@@ -12,6 +12,10 @@
   "versions": [
     {
       "version": "3.4.0-SNAPSHOT",
+      "buildId": 534
+    },
+    {
+      "version": "3.4.0-SNAPSHOT",
       "buildId": "522"
     }
   ]
