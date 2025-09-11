@@ -167,51 +167,6 @@ jobs:
             fi
           fi
       
-      # FABRIC (Fabric API)
-      - name: Check Fabric updates
-        id: fabric
-        run: |
-          echo "Checking Fabric updates..."
-          CURRENT_FABRIC=$(cat metadata/platforms/fabric.json | jq '.versions')
-          
-          # Hole nur stabile Game versions (nicht Snapshots)
-          GAME_VERSIONS=$(curl -s "https://meta.fabricmc.net/v2/versions/game" | jq '[.[] | select(.stable == true)][:5]')
-          echo "Found stable game versions: $GAME_VERSIONS"
-          
-          # Hole Loader versions
-          LOADER_VERSION=$(curl -s "https://meta.fabricmc.net/v2/versions/loader" | jq -r '.[0].version // empty')
-          echo "Latest loader version: $LOADER_VERSION"
-          
-          # Hole Fabric API versions
-          API_VERSION=$(curl -s "https://meta.fabricmc.net/v2/versions/fabric-api" | jq -r '.[0].version // empty')
-          echo "Latest API version: $API_VERSION"
-          
-          if [ -z "$LOADER_VERSION" ] || [ -z "$API_VERSION" ] || [ "$GAME_VERSIONS" = "null" ] || [ "$GAME_VERSIONS" = "[]" ]; then
-            echo "Fabric API error or missing data"
-            echo "has_updates=false" >> $GITHUB_OUTPUT
-          else
-            # Erstelle neue Fabric Versionen mit jq
-            NEW_FABRIC=$(echo "$GAME_VERSIONS" | jq --arg loader "$LOADER_VERSION" --arg api "$API_VERSION" '
-              map({
-                version: .version,
-                buildId: $loader,
-                fabricAPIVersion: $api
-              })
-            ')
-            echo "Generated NEW_FABRIC: $NEW_FABRIC"
-            
-            NEW_VERSIONS=$(echo "$CURRENT_FABRIC $NEW_FABRIC" | jq -s '.[1] - .[0]')
-            
-            if [ "$(echo $NEW_VERSIONS | jq length)" -gt 0 ]; then
-              echo "New Fabric versions found:"
-              echo "$NEW_VERSIONS" | jq .
-              echo "has_updates=true" >> $GITHUB_OUTPUT
-              echo "$NEW_VERSIONS" > fabric-new.json
-            else
-              echo "No new Fabric versions"
-              echo "has_updates=false" >> $GITHUB_OUTPUT
-            fi
-          fi
       
       # WATERFALL (PaperMC API)
       - name: Check Waterfall updates
@@ -287,15 +242,6 @@ jobs:
           mv purpur-updated.json metadata/platforms/purpur.json
           echo "Purpur metadata updated successfully"
       
-      - name: Update Fabric metadata
-        if: steps.fabric.outputs.has_updates == 'true'
-        run: |
-          echo "Updating Fabric metadata..."
-          jq --slurpfile new fabric-new.json \
-            '.versions = (.versions + $new[0]) | .versions |= sort_by(.version) | .versions |= reverse' \
-            metadata/platforms/fabric.json > fabric-updated.json
-          mv fabric-updated.json metadata/platforms/fabric.json
-          echo "Fabric metadata updated successfully"
       
       - name: Update Waterfall metadata
         if: steps.waterfall.outputs.has_updates == 'true'
@@ -307,8 +253,8 @@ jobs:
           mv waterfall-updated.json metadata/platforms/waterfall.json
           echo "Waterfall metadata updated successfully"
       
-      - name: Create Pull Request
-        if: steps.paper.outputs.has_updates == 'true' || steps.velocity.outputs.has_updates == 'true' || steps.folia.outputs.has_updates == 'true' || steps.purpur.outputs.has_updates == 'true' || steps.fabric.outputs.has_updates == 'true' || steps.waterfall.outputs.has_updates == 'true'
+                      - name: Create Pull Request
+                        if: steps.paper.outputs.has_updates == 'true' || steps.velocity.outputs.has_updates == 'true' || steps.folia.outputs.has_updates == 'true' || steps.purpur.outputs.has_updates == 'true' || steps.waterfall.outputs.has_updates == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -323,7 +269,6 @@ jobs:
             - **Velocity**: ${{ steps.velocity.outputs.has_updates == 'true' && '✅ Updated' || '❌ No updates' }}
             - **Folia**: ${{ steps.folia.outputs.has_updates == 'true' && '✅ Updated' || '❌ No updates' }}
             - **Purpur**: ${{ steps.purpur.outputs.has_updates == 'true' && '✅ Updated' || '❌ No updates' }}
-            - **Fabric**: ${{ steps.fabric.outputs.has_updates == 'true' && '✅ Updated' || '❌ No updates' }}
             - **Waterfall**: ${{ steps.waterfall.outputs.has_updates == 'true' && '✅ Updated' || '❌ No updates' }}
             
             ### Changes
