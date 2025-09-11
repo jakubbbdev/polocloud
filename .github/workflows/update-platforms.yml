@@ -13,6 +13,11 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
       - name: Install jq
         run: sudo apt-get install -y jq
       
@@ -27,26 +32,37 @@ jobs:
           PAPER_VERSIONS=$(curl -s "https://api.papermc.io/v2/projects/paper" | jq '.versions')
           echo "Found Paper versions: $PAPER_VERSIONS"
           
-          # Für jede Version hole die neueste Build-ID
-          NEW_PAPER="[]"
+          # Prüfe nur neue Versionen (buildId größer als letzte eingetragene)
+          NEW_VERSIONS="[]"
           for version in $(echo "$PAPER_VERSIONS" | jq -r '.[]'); do
             echo "Checking version: $version"
-            BUILD_DATA=$(curl -s "https://api.papermc.io/v2/projects/paper/versions/$version")
-            BUILD_ID=$(echo "$BUILD_DATA" | jq '.builds | max')
+            BUILD_ID=$(curl -s "https://api.papermc.io/v2/projects/paper/versions/$version" | jq '.builds | max')
             echo "Latest build for $version: $BUILD_ID"
             
-            NEW_VERSION="{\"version\": \"$version\", \"buildId\": $BUILD_ID}"
-            NEW_PAPER=$(echo "$NEW_PAPER $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+            if [ "$BUILD_ID" != "null" ]; then
+              # Prüfe ob diese Version bereits existiert
+              EXISTS=$(echo "$CURRENT_PAPER" | jq --arg v "$version" --arg b "$BUILD_ID" '.[] | select(.version == $v and .buildId >= ($b | tonumber))')
+              if [ -z "$EXISTS" ]; then
+                echo "New version found: $version build $BUILD_ID"
+                NEW_VERSION="{\"version\": \"$version\", \"buildId\": $BUILD_ID}"
+                NEW_VERSIONS=$(echo "$NEW_VERSIONS $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+              else
+                echo "Version $version build $BUILD_ID already exists or is older"
+              fi
+            fi
           done
-          
-          # Vergleiche mit aktuellen Versionen
-          NEW_VERSIONS=$(echo "$CURRENT_PAPER $NEW_PAPER" | jq -s '.[1] - .[0]')
           
           if [ "$(echo $NEW_VERSIONS | jq length)" -gt 0 ]; then
             echo "New Paper versions found:"
             echo "$NEW_VERSIONS" | jq .
             echo "has_updates=true" >> $GITHUB_OUTPUT
-            echo "$NEW_VERSIONS" > paper-new.json
+            
+            # Update direkt die JSON-Datei
+            jq --slurpfile new <(echo "$NEW_VERSIONS") \
+              '.versions = (.versions + $new[0]) | .versions |= sort_by(.version) | .versions |= reverse' \
+              metadata/platforms/paper.json > paper-temp.json
+            mv paper-temp.json metadata/platforms/paper.json
+            echo "Paper metadata updated successfully"
           else
             echo "No new Paper versions"
             echo "has_updates=false" >> $GITHUB_OUTPUT
@@ -62,67 +78,88 @@ jobs:
           VELOCITY_VERSIONS=$(curl -s "https://api.papermc.io/v2/projects/velocity" | jq '.versions')
           echo "Found Velocity versions: $VELOCITY_VERSIONS"
           
-          NEW_VELOCITY="[]"
+          # Prüfe nur neue Versionen (buildId größer als letzte eingetragene)
+          NEW_VERSIONS="[]"
           for version in $(echo "$VELOCITY_VERSIONS" | jq -r '.[]'); do
             echo "Checking version: $version"
-            BUILD_DATA=$(curl -s "https://api.papermc.io/v2/projects/velocity/versions/$version")
-            BUILD_ID=$(echo "$BUILD_DATA" | jq '.builds | max')
+            BUILD_ID=$(curl -s "https://api.papermc.io/v2/projects/velocity/versions/$version" | jq '.builds | max')
             echo "Latest build for $version: $BUILD_ID"
             
-            NEW_VERSION="{\"version\": \"$version\", \"buildId\": $BUILD_ID}"
-            NEW_VELOCITY=$(echo "$NEW_VELOCITY $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+            if [ "$BUILD_ID" != "null" ]; then
+              # Prüfe ob diese Version bereits existiert
+              EXISTS=$(echo "$CURRENT_VELOCITY" | jq --arg v "$version" --arg b "$BUILD_ID" '.[] | select(.version == $v and .buildId >= ($b | tonumber))')
+              if [ -z "$EXISTS" ]; then
+                echo "New version found: $version build $BUILD_ID"
+                NEW_VERSION="{\"version\": \"$version\", \"buildId\": $BUILD_ID}"
+                NEW_VERSIONS=$(echo "$NEW_VERSIONS $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+              else
+                echo "Version $version build $BUILD_ID already exists or is older"
+              fi
+            fi
           done
-          
-          NEW_VERSIONS=$(echo "$CURRENT_VELOCITY $NEW_VELOCITY" | jq -s '.[1] - .[0]')
           
           if [ "$(echo $NEW_VERSIONS | jq length)" -gt 0 ]; then
             echo "New Velocity versions found:"
             echo "$NEW_VERSIONS" | jq .
             echo "has_updates=true" >> $GITHUB_OUTPUT
-            echo "$NEW_VERSIONS" > velocity-new.json
+            
+            # Update direkt die JSON-Datei
+            jq --slurpfile new <(echo "$NEW_VERSIONS") \
+              '.versions = (.versions + $new[0]) | .versions |= sort_by(.version) | .versions |= reverse' \
+              metadata/platforms/velocity.json > velocity-temp.json
+            mv velocity-temp.json metadata/platforms/velocity.json
+            echo "Velocity metadata updated successfully"
           else
             echo "No new Velocity versions"
             echo "has_updates=false" >> $GITHUB_OUTPUT
           fi
       
-      # FOLIA (Fill Data API)
+      # FOLIA (PaperMC API)
       - name: Check Folia updates
         id: folia
         run: |
           echo "Checking Folia updates..."
           CURRENT_FOLIA=$(cat metadata/platforms/folia.json | jq '.versions')
           
-          # Folia verwendet eine andere API - fill-data.papermc.io
           FOLIA_VERSIONS=$(curl -s "https://api.papermc.io/v2/projects/folia" | jq '.versions')
           echo "Found Folia versions: $FOLIA_VERSIONS"
           
-          NEW_FOLIA="[]"
+          # Prüfe nur neue Versionen (buildId größer als letzte eingetragene)
+          NEW_VERSIONS="[]"
           for version in $(echo "$FOLIA_VERSIONS" | jq -r '.[]'); do
             echo "Checking version: $version"
             BUILD_DATA=$(curl -s "https://api.papermc.io/v2/projects/folia/versions/$version")
-            echo "Build data for $version: $BUILD_DATA"
-            
-            # Folia hat eine andere API-Struktur - hole den neuesten Build
             BUILD_ID=$(echo "$BUILD_DATA" | jq '.builds | max')
             echo "Latest build for $version: $BUILD_ID"
             
-            # Hole Hash für den neuesten Build - Folia hat Builds als Array von Zahlen
+            # Hole Hash für den neuesten Build
             HASH=$(curl -s "https://api.papermc.io/v2/projects/folia/versions/$version/builds/$BUILD_ID" | jq -r '.downloads.application.sha256 // empty')
             echo "Hash for $version build $BUILD_ID: $HASH"
             
             if [ "$BUILD_ID" != "null" ] && [ -n "$HASH" ]; then
-              NEW_VERSION="{\"version\": \"$version\", \"buildId\": \"$BUILD_ID\", \"hash\": \"$HASH\"}"
-              NEW_FOLIA=$(echo "$NEW_FOLIA $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+              # Prüfe ob diese Version bereits existiert
+              EXISTS=$(echo "$CURRENT_FOLIA" | jq --arg v "$version" --arg b "$BUILD_ID" '.[] | select(.version == $v and .buildId >= ($b | tonumber))')
+              if [ -z "$EXISTS" ]; then
+                echo "New version found: $version build $BUILD_ID"
+                NEW_VERSION="{\"version\": \"$version\", \"buildId\": \"$BUILD_ID\", \"hash\": \"$HASH\"}"
+                NEW_VERSIONS=$(echo "$NEW_VERSIONS $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+              else
+                echo "Version $version build $BUILD_ID already exists or is older"
+              fi
             fi
           done
-          
-          NEW_VERSIONS=$(echo "$CURRENT_FOLIA $NEW_FOLIA" | jq -s '.[1] - .[0]')
           
           if [ "$(echo $NEW_VERSIONS | jq length)" -gt 0 ]; then
             echo "New Folia versions found:"
             echo "$NEW_VERSIONS" | jq .
             echo "has_updates=true" >> $GITHUB_OUTPUT
-            echo "$NEW_VERSIONS" > folia-new.json
+            
+            # Update direkt die JSON-Datei
+            jq --slurpfile new <(echo "$NEW_VERSIONS") \
+              '.versions = (.versions + $new[0]) | .versions |= sort_by(.version) | .versions |= reverse' \
+              metadata/platforms/folia.json > folia-temp.json
+            mv folia-temp.json metadata/platforms/folia.json
+            echo "Folia metadata updated successfully"
           else
             echo "No new Folia versions"
             echo "has_updates=false" >> $GITHUB_OUTPUT
@@ -142,31 +179,42 @@ jobs:
             echo "No Purpur versions found or API error"
             echo "has_updates=false" >> $GITHUB_OUTPUT
           else
-            NEW_PURPUR="[]"
+            # Prüfe nur neue Versionen (buildId größer als letzte eingetragene)
+            NEW_VERSIONS="[]"
             for version in $(echo "$PURPUR_VERSIONS" | jq -r '.[]'); do
               echo "Checking version: $version"
               BUILD_ID=$(curl -s "https://api.purpurmc.org/v2/purpur/$version" | jq '.builds | max')
               echo "Latest build for $version: $BUILD_ID"
               
               if [ "$BUILD_ID" != "null" ]; then
-                NEW_VERSION="{\"version\": \"$version\", \"buildId\": \"$BUILD_ID\"}"
-                NEW_PURPUR=$(echo "$NEW_PURPUR $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+                # Prüfe ob diese Version bereits existiert
+                EXISTS=$(echo "$CURRENT_PURPUR" | jq --arg v "$version" --arg b "$BUILD_ID" '.[] | select(.version == $v and .buildId >= ($b | tonumber))')
+                if [ -z "$EXISTS" ]; then
+                  echo "New version found: $version build $BUILD_ID"
+                  NEW_VERSION="{\"version\": \"$version\", \"buildId\": \"$BUILD_ID\"}"
+                  NEW_VERSIONS=$(echo "$NEW_VERSIONS $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+                else
+                  echo "Version $version build $BUILD_ID already exists or is older"
+                fi
               fi
             done
-            
-            NEW_VERSIONS=$(echo "$CURRENT_PURPUR $NEW_PURPUR" | jq -s '.[1] - .[0]')
             
             if [ "$(echo $NEW_VERSIONS | jq length)" -gt 0 ]; then
               echo "New Purpur versions found:"
               echo "$NEW_VERSIONS" | jq .
               echo "has_updates=true" >> $GITHUB_OUTPUT
-              echo "$NEW_VERSIONS" > purpur-new.json
+              
+              # Update direkt die JSON-Datei
+              jq --slurpfile new <(echo "$NEW_VERSIONS") \
+                '.versions = (.versions + $new[0]) | .versions |= sort_by(.version) | .versions |= reverse' \
+                metadata/platforms/purpur.json > purpur-temp.json
+              mv purpur-temp.json metadata/platforms/purpur.json
+              echo "Purpur metadata updated successfully"
             else
               echo "No new Purpur versions"
               echo "has_updates=false" >> $GITHUB_OUTPUT
             fi
           fi
-      
       
       # WATERFALL (PaperMC API)
       - name: Check Waterfall updates
@@ -178,80 +226,41 @@ jobs:
           WATERFALL_VERSIONS=$(curl -s "https://api.papermc.io/v2/projects/waterfall" | jq '.versions')
           echo "Found Waterfall versions: $WATERFALL_VERSIONS"
           
-          NEW_WATERFALL="[]"
+          # Prüfe nur neue Versionen (buildId größer als letzte eingetragene)
+          NEW_VERSIONS="[]"
           for version in $(echo "$WATERFALL_VERSIONS" | jq -r '.[]'); do
             echo "Checking version: $version"
-            BUILD_DATA=$(curl -s "https://api.papermc.io/v2/projects/waterfall/versions/$version")
-            BUILD_ID=$(echo "$BUILD_DATA" | jq '.builds | max')
+            BUILD_ID=$(curl -s "https://api.papermc.io/v2/projects/waterfall/versions/$version" | jq '.builds | max')
             echo "Latest build for $version: $BUILD_ID"
             
-            NEW_VERSION="{\"version\": \"$version\", \"buildId\": $BUILD_ID}"
-            NEW_WATERFALL=$(echo "$NEW_WATERFALL $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+            if [ "$BUILD_ID" != "null" ]; then
+              # Prüfe ob diese Version bereits existiert
+              EXISTS=$(echo "$CURRENT_WATERFALL" | jq --arg v "$version" --arg b "$BUILD_ID" '.[] | select(.version == $v and .buildId >= ($b | tonumber))')
+              if [ -z "$EXISTS" ]; then
+                echo "New version found: $version build $BUILD_ID"
+                NEW_VERSION="{\"version\": \"$version\", \"buildId\": \"$BUILD_ID\"}"
+                NEW_VERSIONS=$(echo "$NEW_VERSIONS $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+              else
+                echo "Version $version build $BUILD_ID already exists or is older"
+              fi
+            fi
           done
-          
-          NEW_VERSIONS=$(echo "$CURRENT_WATERFALL $NEW_WATERFALL" | jq -s '.[1] - .[0]')
           
           if [ "$(echo $NEW_VERSIONS | jq length)" -gt 0 ]; then
             echo "New Waterfall versions found:"
             echo "$NEW_VERSIONS" | jq .
             echo "has_updates=true" >> $GITHUB_OUTPUT
-            echo "$NEW_VERSIONS" > waterfall-new.json
+            
+            # Update direkt die JSON-Datei
+            jq --slurpfile new <(echo "$NEW_VERSIONS") \
+              '.versions = (.versions + $new[0]) | .versions |= sort_by(.version) | .versions |= reverse' \
+              metadata/platforms/waterfall.json > waterfall-temp.json
+            mv waterfall-temp.json metadata/platforms/waterfall.json
+            echo "Waterfall metadata updated successfully"
           else
             echo "No new Waterfall versions"
             echo "has_updates=false" >> $GITHUB_OUTPUT
           fi
-      
-      # Update alle Platforms
-      - name: Update Paper metadata
-        if: steps.paper.outputs.has_updates == 'true'
-        run: |
-          echo "Updating Paper metadata..."
-          jq --slurpfile new paper-new.json \
-            '.versions = (.versions + $new[0]) | .versions |= sort_by(.version) | .versions |= reverse' \
-            metadata/platforms/paper.json > paper-updated.json
-          mv paper-updated.json metadata/platforms/paper.json
-          echo "Paper metadata updated successfully"
-      
-      - name: Update Velocity metadata
-        if: steps.velocity.outputs.has_updates == 'true'
-        run: |
-          echo "Updating Velocity metadata..."
-          jq --slurpfile new velocity-new.json \
-            '.versions = (.versions + $new[0]) | .versions |= sort_by(.version) | .versions |= reverse' \
-            metadata/platforms/velocity.json > velocity-updated.json
-          mv velocity-updated.json metadata/platforms/velocity.json
-          echo "Velocity metadata updated successfully"
-      
-      - name: Update Folia metadata
-        if: steps.folia.outputs.has_updates == 'true'
-        run: |
-          echo "Updating Folia metadata..."
-          jq --slurpfile new folia-new.json \
-            '.versions = (.versions + $new[0]) | .versions |= sort_by(.version) | .versions |= reverse' \
-            metadata/platforms/folia.json > folia-updated.json
-          mv folia-updated.json metadata/platforms/folia.json
-          echo "Folia metadata updated successfully"
-      
-      - name: Update Purpur metadata
-        if: steps.purpur.outputs.has_updates == 'true'
-        run: |
-          echo "Updating Purpur metadata..."
-          jq --slurpfile new purpur-new.json \
-            '.versions = (.versions + $new[0]) | .versions |= sort_by(.version) | .versions |= reverse' \
-            metadata/platforms/purpur.json > purpur-updated.json
-          mv purpur-updated.json metadata/platforms/purpur.json
-          echo "Purpur metadata updated successfully"
-      
-      
-      - name: Update Waterfall metadata
-        if: steps.waterfall.outputs.has_updates == 'true'
-        run: |
-          echo "Updating Waterfall metadata..."
-          jq --slurpfile new waterfall-new.json \
-            '.versions = (.versions + $new[0]) | .versions |= sort_by(.version) | .versions |= reverse' \
-            metadata/platforms/waterfall.json > waterfall-updated.json
-          mv waterfall-updated.json metadata/platforms/waterfall.json
-          echo "Waterfall metadata updated successfully"
       
       - name: Create Pull Request
         if: steps.paper.outputs.has_updates == 'true' || steps.velocity.outputs.has_updates == 'true' || steps.folia.outputs.has_updates == 'true' || steps.purpur.outputs.has_updates == 'true' || steps.waterfall.outputs.has_updates == 'true'
