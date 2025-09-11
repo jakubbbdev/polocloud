@@ -41,8 +41,8 @@ jobs:
             
             if [ "$BUILD_ID" != "null" ]; then
               # Prüfe ob diese Version bereits existiert und ob buildId größer ist
-              CURRENT_BUILD=$(echo "$CURRENT_PAPER" | jq --arg v "$version" '.[] | select(.version == $v) | .buildId // 0')
-              if [ -z "$CURRENT_BUILD" ] || [ "$BUILD_ID" -gt "$CURRENT_BUILD" ]; then
+              CURRENT_BUILD=$(echo "$CURRENT_PAPER" | jq --arg v "$version" '.[] | select(.version == $v) | .buildId // "0"')
+              if [ -z "$CURRENT_BUILD" ] || [ "$CURRENT_BUILD" = "null" ] || [ "$BUILD_ID" -gt "$CURRENT_BUILD" ]; then
                 echo "New version found: $version build $BUILD_ID (current: $CURRENT_BUILD)"
                 NEW_VERSION="{\"version\": \"$version\", \"buildId\": $BUILD_ID}"
                 NEW_VERSIONS=$(echo "$NEW_VERSIONS $NEW_VERSION" | jq -s '.[0] + [.[1]]')
@@ -87,8 +87,8 @@ jobs:
             
             if [ "$BUILD_ID" != "null" ]; then
               # Prüfe ob diese Version bereits existiert und ob buildId größer ist
-              CURRENT_BUILD=$(echo "$CURRENT_VELOCITY" | jq --arg v "$version" '.[] | select(.version == $v) | .buildId // 0')
-              if [ -z "$CURRENT_BUILD" ] || [ "$BUILD_ID" -gt "$CURRENT_BUILD" ]; then
+              CURRENT_BUILD=$(echo "$CURRENT_VELOCITY" | jq --arg v "$version" '.[] | select(.version == $v) | .buildId // "0"')
+              if [ -z "$CURRENT_BUILD" ] || [ "$CURRENT_BUILD" = "null" ] || [ "$BUILD_ID" -gt "$CURRENT_BUILD" ]; then
                 echo "New version found: $version build $BUILD_ID (current: $CURRENT_BUILD)"
                 NEW_VERSION="{\"version\": \"$version\", \"buildId\": $BUILD_ID}"
                 NEW_VERSIONS=$(echo "$NEW_VERSIONS $NEW_VERSION" | jq -s '.[0] + [.[1]]')
@@ -138,8 +138,8 @@ jobs:
             
             if [ "$BUILD_ID" != "null" ] && [ -n "$HASH" ]; then
               # Prüfe ob diese Version bereits existiert und ob buildId größer ist
-              CURRENT_BUILD=$(echo "$CURRENT_FOLIA" | jq --arg v "$version" '.[] | select(.version == $v) | .buildId // 0')
-              if [ -z "$CURRENT_BUILD" ] || [ "$BUILD_ID" -gt "$CURRENT_BUILD" ]; then
+              CURRENT_BUILD=$(echo "$CURRENT_FOLIA" | jq --arg v "$version" '.[] | select(.version == $v) | .buildId // "0"')
+              if [ -z "$CURRENT_BUILD" ] || [ "$CURRENT_BUILD" = "null" ] || [ "$BUILD_ID" -gt "$CURRENT_BUILD" ]; then
                 echo "New version found: $version build $BUILD_ID (current: $CURRENT_BUILD)"
                 NEW_VERSION="{\"version\": \"$version\", \"buildId\": \"$BUILD_ID\", \"hash\": \"$HASH\"}"
                 NEW_VERSIONS=$(echo "$NEW_VERSIONS $NEW_VERSION" | jq -s '.[0] + [.[1]]')
@@ -188,8 +188,8 @@ jobs:
               
               if [ "$BUILD_ID" != "null" ]; then
                 # Prüfe ob diese Version bereits existiert und ob buildId größer ist
-                CURRENT_BUILD=$(echo "$CURRENT_PURPUR" | jq --arg v "$version" '.[] | select(.version == $v) | .buildId // 0')
-                if [ -z "$CURRENT_BUILD" ] || [ "$BUILD_ID" -gt "$CURRENT_BUILD" ]; then
+                CURRENT_BUILD=$(echo "$CURRENT_PURPUR" | jq --arg v "$version" '.[] | select(.version == $v) | .buildId // "0"')
+                if [ -z "$CURRENT_BUILD" ] || [ "$CURRENT_BUILD" = "null" ] || [ "$BUILD_ID" -gt "$CURRENT_BUILD" ]; then
                   echo "New version found: $version build $BUILD_ID (current: $CURRENT_BUILD)"
                   NEW_VERSION="{\"version\": \"$version\", \"buildId\": \"$BUILD_ID\"}"
                   NEW_VERSIONS=$(echo "$NEW_VERSIONS $NEW_VERSION" | jq -s '.[0] + [.[1]]')
@@ -235,8 +235,8 @@ jobs:
             
             if [ "$BUILD_ID" != "null" ]; then
               # Prüfe ob diese Version bereits existiert und ob buildId größer ist
-              CURRENT_BUILD=$(echo "$CURRENT_WATERFALL" | jq --arg v "$version" '.[] | select(.version == $v) | .buildId // 0')
-              if [ -z "$CURRENT_BUILD" ] || [ "$BUILD_ID" -gt "$CURRENT_BUILD" ]; then
+              CURRENT_BUILD=$(echo "$CURRENT_WATERFALL" | jq --arg v "$version" '.[] | select(.version == $v) | .buildId // "0"')
+              if [ -z "$CURRENT_BUILD" ] || [ "$CURRENT_BUILD" = "null" ] || [ "$BUILD_ID" -gt "$CURRENT_BUILD" ]; then
                 echo "New version found: $version build $BUILD_ID (current: $CURRENT_BUILD)"
                 NEW_VERSION="{\"version\": \"$version\", \"buildId\": \"$BUILD_ID\"}"
                 NEW_VERSIONS=$(echo "$NEW_VERSIONS $NEW_VERSION" | jq -s '.[0] + [.[1]]')
