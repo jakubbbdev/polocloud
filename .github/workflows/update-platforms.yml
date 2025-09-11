@@ -85,13 +85,14 @@ jobs:
             echo "has_updates=false" >> $GITHUB_OUTPUT
           fi
       
-      # FOLIA (PaperMC API)
+      # FOLIA (Fill Data API)
       - name: Check Folia updates
         id: folia
         run: |
           echo "Checking Folia updates..."
           CURRENT_FOLIA=$(cat metadata/platforms/folia.json | jq '.versions')
           
+          # Folia verwendet eine andere API - fill-data.papermc.io
           FOLIA_VERSIONS=$(curl -s "https://api.papermc.io/v2/projects/folia" | jq '.versions')
           echo "Found Folia versions: $FOLIA_VERSIONS"
           
@@ -99,12 +100,20 @@ jobs:
           for version in $(echo "$FOLIA_VERSIONS" | jq -r '.[]'); do
             echo "Checking version: $version"
             BUILD_DATA=$(curl -s "https://api.papermc.io/v2/projects/folia/versions/$version")
-            BUILD_ID=$(echo "$BUILD_DATA" | jq '.builds | max')
-            HASH=$(echo "$BUILD_DATA" | jq -r '.builds[] | select(.build == '$BUILD_ID') | .downloads.application.sha256')
-            echo "Latest build for $version: $BUILD_ID, hash: $HASH"
+            echo "Build data for $version: $BUILD_DATA"
             
-            NEW_VERSION="{\"version\": \"$version\", \"buildId\": \"$BUILD_ID\", \"hash\": \"$HASH\"}"
-            NEW_FOLIA=$(echo "$NEW_FOLIA $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+            # Folia hat eine andere API-Struktur - hole den neuesten Build
+            BUILD_ID=$(echo "$BUILD_DATA" | jq '.builds | max')
+            echo "Latest build for $version: $BUILD_ID"
+            
+            # Hole Hash für den neuesten Build
+            HASH=$(echo "$BUILD_DATA" | jq -r '.builds[] | select(.build == '$BUILD_ID') | .downloads.application.sha256 // empty')
+            echo "Hash for $version build $BUILD_ID: $HASH"
+            
+            if [ "$BUILD_ID" != "null" ] && [ -n "$HASH" ]; then
+              NEW_VERSION="{\"version\": \"$version\", \"buildId\": \"$BUILD_ID\", \"hash\": \"$HASH\"}"
+              NEW_FOLIA=$(echo "$NEW_FOLIA $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+            fi
           done
           
           NEW_VERSIONS=$(echo "$CURRENT_FOLIA $NEW_FOLIA" | jq -s '.[1] - .[0]')
@@ -129,26 +138,33 @@ jobs:
           PURPUR_VERSIONS=$(curl -s "https://api.purpurmc.org/v2/versions" | jq '.versions')
           echo "Found Purpur versions: $PURPUR_VERSIONS"
           
-          NEW_PURPUR="[]"
-          for version in $(echo "$PURPUR_VERSIONS" | jq -r '.[]'); do
-            echo "Checking version: $version"
-            BUILD_ID=$(curl -s "https://api.purpurmc.org/v2/purpur/$version" | jq '.builds | max')
-            echo "Latest build for $version: $BUILD_ID"
-            
-            NEW_VERSION="{\"version\": \"$version\", \"buildId\": \"$BUILD_ID\"}"
-            NEW_PURPUR=$(echo "$NEW_PURPUR $NEW_VERSION" | jq -s '.[0] + [.[1]]')
-          done
-          
-          NEW_VERSIONS=$(echo "$CURRENT_PURPUR $NEW_PURPUR" | jq -s '.[1] - .[0]')
-          
-          if [ "$(echo $NEW_VERSIONS | jq length)" -gt 0 ]; then
-            echo "New Purpur versions found:"
-            echo "$NEW_VERSIONS" | jq .
-            echo "has_updates=true" >> $GITHUB_OUTPUT
-            echo "$NEW_VERSIONS" > purpur-new.json
-          else
-            echo "No new Purpur versions"
+          if [ "$PURPUR_VERSIONS" = "null" ] || [ "$PURPUR_VERSIONS" = "[]" ]; then
+            echo "No Purpur versions found or API error"
             echo "has_updates=false" >> $GITHUB_OUTPUT
+          else
+            NEW_PURPUR="[]"
+            for version in $(echo "$PURPUR_VERSIONS" | jq -r '.[]'); do
+              echo "Checking version: $version"
+              BUILD_ID=$(curl -s "https://api.purpurmc.org/v2/purpur/$version" | jq '.builds | max')
+              echo "Latest build for $version: $BUILD_ID"
+              
+              if [ "$BUILD_ID" != "null" ]; then
+                NEW_VERSION="{\"version\": \"$version\", \"buildId\": \"$BUILD_ID\"}"
+                NEW_PURPUR=$(echo "$NEW_PURPUR $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+              fi
+            done
+            
+            NEW_VERSIONS=$(echo "$CURRENT_PURPUR $NEW_PURPUR" | jq -s '.[1] - .[0]')
+            
+            if [ "$(echo $NEW_VERSIONS | jq length)" -gt 0 ]; then
+              echo "New Purpur versions found:"
+              echo "$NEW_VERSIONS" | jq .
+              echo "has_updates=true" >> $GITHUB_OUTPUT
+              echo "$NEW_VERSIONS" > purpur-new.json
+            else
+              echo "No new Purpur versions"
+              echo "has_updates=false" >> $GITHUB_OUTPUT
+            fi
           fi
       
       # FABRIC (Fabric API)
@@ -163,30 +179,35 @@ jobs:
           echo "Found game versions: $GAME_VERSIONS"
           
           # Hole Loader versions
-          LOADER_VERSION=$(curl -s "https://meta.fabricmc.net/v2/versions/loader" | jq -r '.[0].version')
+          LOADER_VERSION=$(curl -s "https://meta.fabricmc.net/v2/versions/loader" | jq -r '.[0].version // empty')
           echo "Latest loader version: $LOADER_VERSION"
           
           # Hole Fabric API versions
-          API_VERSION=$(curl -s "https://meta.fabricmc.net/v2/versions/fabric-api" | jq -r '.[0].version')
+          API_VERSION=$(curl -s "https://meta.fabricmc.net/v2/versions/fabric-api" | jq -r '.[0].version // empty')
           echo "Latest API version: $API_VERSION"
           
-          # Erstelle neue Fabric Versionen
-          NEW_FABRIC="[]"
-          for game_version in $(echo "$GAME_VERSIONS" | jq -r '.[].version'); do
-            NEW_VERSION="{\"version\": \"$game_version\", \"buildId\": \"$LOADER_VERSION\", \"fabricAPIVersion\": \"$API_VERSION\"}"
-            NEW_FABRIC=$(echo "$NEW_FABRIC $NEW_VERSION" | jq -s '.[0] + [.[1]]')
-          done
-          
-          NEW_VERSIONS=$(echo "$CURRENT_FABRIC $NEW_FABRIC" | jq -s '.[1] - .[0]')
-          
-          if [ "$(echo $NEW_VERSIONS | jq length)" -gt 0 ]; then
-            echo "New Fabric versions found:"
-            echo "$NEW_VERSIONS" | jq .
-            echo "has_updates=true" >> $GITHUB_OUTPUT
-            echo "$NEW_VERSIONS" > fabric-new.json
-          else
-            echo "No new Fabric versions"
+          if [ -z "$LOADER_VERSION" ] || [ -z "$API_VERSION" ] || [ "$GAME_VERSIONS" = "null" ]; then
+            echo "Fabric API error or missing data"
             echo "has_updates=false" >> $GITHUB_OUTPUT
+          else
+            # Erstelle neue Fabric Versionen
+            NEW_FABRIC="[]"
+            for game_version in $(echo "$GAME_VERSIONS" | jq -r '.[].version'); do
+              NEW_VERSION="{\"version\": \"$game_version\", \"buildId\": \"$LOADER_VERSION\", \"fabricAPIVersion\": \"$API_VERSION\"}"
+              NEW_FABRIC=$(echo "$NEW_FABRIC $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+            done
+            
+            NEW_VERSIONS=$(echo "$CURRENT_FABRIC $NEW_FABRIC" | jq -s '.[1] - .[0]')
+            
+            if [ "$(echo $NEW_VERSIONS | jq length)" -gt 0 ]; then
+              echo "New Fabric versions found:"
+              echo "$NEW_VERSIONS" | jq .
+              echo "has_updates=true" >> $GITHUB_OUTPUT
+              echo "$NEW_VERSIONS" > fabric-new.json
+            else
+              echo "No new Fabric versions"
+              echo "has_updates=false" >> $GITHUB_OUTPUT
+            fi
           fi
       
       # WATERFALL (PaperMC API)
