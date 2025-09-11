@@ -174,9 +174,9 @@ jobs:
           echo "Checking Fabric updates..."
           CURRENT_FABRIC=$(cat metadata/platforms/fabric.json | jq '.versions')
           
-          # Hole Game versions
-          GAME_VERSIONS=$(curl -s "https://meta.fabricmc.net/v2/versions/game" | jq '.[:5]')
-          echo "Found game versions: $GAME_VERSIONS"
+          # Hole nur stabile Game versions (nicht Snapshots)
+          GAME_VERSIONS=$(curl -s "https://meta.fabricmc.net/v2/versions/game" | jq '[.[] | select(.stable == true)][:5]')
+          echo "Found stable game versions: $GAME_VERSIONS"
           
           # Hole Loader versions
           LOADER_VERSION=$(curl -s "https://meta.fabricmc.net/v2/versions/loader" | jq -r '.[0].version // empty')
@@ -186,7 +186,7 @@ jobs:
           API_VERSION=$(curl -s "https://meta.fabricmc.net/v2/versions/fabric-api" | jq -r '.[0].version // empty')
           echo "Latest API version: $API_VERSION"
           
-          if [ -z "$LOADER_VERSION" ] || [ -z "$API_VERSION" ] || [ "$GAME_VERSIONS" = "null" ]; then
+          if [ -z "$LOADER_VERSION" ] || [ -z "$API_VERSION" ] || [ "$GAME_VERSIONS" = "null" ] || [ "$GAME_VERSIONS" = "[]" ]; then
             echo "Fabric API error or missing data"
             echo "has_updates=false" >> $GITHUB_OUTPUT
           else
