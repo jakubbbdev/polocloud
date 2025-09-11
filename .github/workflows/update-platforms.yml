@@ -253,8 +253,8 @@ jobs:
           mv waterfall-updated.json metadata/platforms/waterfall.json
           echo "Waterfall metadata updated successfully"
       
-                      - name: Create Pull Request
-                        if: steps.paper.outputs.has_updates == 'true' || steps.velocity.outputs.has_updates == 'true' || steps.folia.outputs.has_updates == 'true' || steps.purpur.outputs.has_updates == 'true' || steps.waterfall.outputs.has_updates == 'true'
+      - name: Create Pull Request
+        if: steps.paper.outputs.has_updates == 'true' || steps.velocity.outputs.has_updates == 'true' || steps.folia.outputs.has_updates == 'true' || steps.purpur.outputs.has_updates == 'true' || steps.waterfall.outputs.has_updates == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
