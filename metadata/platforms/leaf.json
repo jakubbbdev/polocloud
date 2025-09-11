@@ -18,6 +18,10 @@
   "versions": [
     {
       "version": "1.21.8",
+      "buildId": 106
+    },
+    {
+      "version": "1.21.8",
       "buildId": "28"
     }
   ]
