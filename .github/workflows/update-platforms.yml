@@ -384,8 +384,66 @@ jobs:
             echo "has_updates=false" >> $GITHUB_OUTPUT
           fi
       
+      # LEAF (LeafMC API)
+      - name: Check Leaf updates
+        id: leaf
+        run: |
+          echo "Checking Leaf updates..."
+          CURRENT_LEAF=$(cat metadata/platforms/leaf.json | jq '.versions')
+          
+          # Hole alle Leaf Versionen von LeafMC API
+          LEAF_VERSIONS=$(curl -s "https://api.leafmc.one/v2/projects/leaf" | jq '.versions')
+          echo "Found Leaf versions: $LEAF_VERSIONS"
+          
+          # Prüfe nur neue Versionen (buildId größer als letzte eingetragene)
+          NEW_VERSIONS="[]"
+          for version in $(echo "$LEAF_VERSIONS" | jq -r '.[]'); do
+            echo "Checking version: $version"
+            BUILD_ID=$(curl -s "https://api.leafmc.one/v2/projects/leaf/versions/$version" | jq '.builds | max')
+            echo "Latest build for $version: $BUILD_ID"
+            
+            if [ "$BUILD_ID" != "null" ]; then
+              # Prüfe ob diese Version bereits existiert und ob buildId größer ist
+              SHOULD_ADD=$(echo "$CURRENT_LEAF" | jq --arg v "$version" --arg b "$BUILD_ID" '
+                if length == 0 then true
+                else
+                  (.[] | select(.version == $v) | .buildId // 0) as $current |
+                  if $current == 0 then true
+                  else ($b | tonumber) > ($current | tonumber)
+                  end
+                end
+              ')
+              
+              if [ "$SHOULD_ADD" = "true" ]; then
+                CURRENT_BUILD=$(echo "$CURRENT_LEAF" | jq --arg v "$version" '.[] | select(.version == $v) | .buildId // "0"')
+                echo "New version found: $version build $BUILD_ID (current: $CURRENT_BUILD)"
+                NEW_VERSION="{\"version\": \"$version\", \"buildId\": $BUILD_ID}"
+                NEW_VERSIONS=$(echo "$NEW_VERSIONS $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+              else
+                CURRENT_BUILD=$(echo "$CURRENT_LEAF" | jq --arg v "$version" '.[] | select(.version == $v) | .buildId // "0"')
+                echo "Version $version build $BUILD_ID already exists or is older (current: $CURRENT_BUILD)"
+              fi
+            fi
+          done
+          
+          if [ "$(echo $NEW_VERSIONS | jq length)" -gt 0 ]; then
+            echo "New Leaf versions found:"
+            echo "$NEW_VERSIONS" | jq .
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            
+            # Update direkt die JSON-Datei
+            jq --slurpfile new <(echo "$NEW_VERSIONS") \
+              '.versions = (.versions + $new[0]) | .versions |= sort_by(.version) | .versions |= reverse' \
+              metadata/platforms/leaf.json > leaf-temp.json
+            mv leaf-temp.json metadata/platforms/leaf.json
+            echo "Leaf metadata updated successfully"
+          else
+            echo "No new Leaf versions"
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Create Pull Request
-        if: steps.paper.outputs.has_updates == 'true' || steps.velocity.outputs.has_updates == 'true' || steps.folia.outputs.has_updates == 'true' || steps.purpur.outputs.has_updates == 'true' || steps.waterfall.outputs.has_updates == 'true' || steps.limbo.outputs.has_updates == 'true'
+        if: steps.paper.outputs.has_updates == 'true' || steps.velocity.outputs.has_updates == 'true' || steps.folia.outputs.has_updates == 'true' || steps.purpur.outputs.has_updates == 'true' || steps.waterfall.outputs.has_updates == 'true' || steps.limbo.outputs.has_updates == 'true' || steps.leaf.outputs.has_updates == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -402,6 +460,7 @@ jobs:
             - **Purpur**: ${{ steps.purpur.outputs.has_updates == 'true' && '✅ Updated' || '❌ No updates' }}
             - **Waterfall**: ${{ steps.waterfall.outputs.has_updates == 'true' && '✅ Updated' || '❌ No updates' }}
             - **Limbo**: ${{ steps.limbo.outputs.has_updates == 'true' && '✅ Updated' || '❌ No updates' }}
+            - **Leaf**: ${{ steps.leaf.outputs.has_updates == 'true' && '✅ Updated' || '❌ No updates' }}
             
             ### Changes
             - Updated `metadata/platforms/*.json` files
