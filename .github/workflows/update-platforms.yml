@@ -106,8 +106,8 @@ jobs:
             BUILD_ID=$(echo "$BUILD_DATA" | jq '.builds | max')
             echo "Latest build for $version: $BUILD_ID"
             
-            # Hole Hash für den neuesten Build
-            HASH=$(echo "$BUILD_DATA" | jq -r '.builds[] | select(.build == '$BUILD_ID') | .downloads.application.sha256 // empty')
+            # Hole Hash für den neuesten Build - Folia hat Builds als Array von Zahlen
+            HASH=$(curl -s "https://api.papermc.io/v2/projects/folia/versions/$version/builds/$BUILD_ID" | jq -r '.downloads.application.sha256 // empty')
             echo "Hash for $version build $BUILD_ID: $HASH"
             
             if [ "$BUILD_ID" != "null" ] && [ -n "$HASH" ]; then
