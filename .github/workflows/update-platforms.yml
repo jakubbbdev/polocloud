@@ -190,21 +190,15 @@ jobs:
             echo "Fabric API error or missing data"
             echo "has_updates=false" >> $GITHUB_OUTPUT
           else
-            # Erstelle neue Fabric Versionen
-            NEW_FABRIC="[]"
-            for game_version in $(echo "$GAME_VERSIONS" | jq -r '.[].version'); do
-              echo "Processing game version: $game_version"
-              NEW_VERSION="{\"version\": \"$game_version\", \"buildId\": \"$LOADER_VERSION\", \"fabricAPIVersion\": \"$API_VERSION\"}"
-              echo "New version object: $NEW_VERSION"
-              
-              # Robuste jq-Verarbeitung
-              if [ "$NEW_FABRIC" = "[]" ]; then
-                NEW_FABRIC="[$NEW_VERSION]"
-              else
-                NEW_FABRIC=$(echo "$NEW_FABRIC" | jq ". + [$NEW_VERSION]")
-              fi
-              echo "Updated NEW_FABRIC: $NEW_FABRIC"
-            done
+            # Erstelle neue Fabric Versionen mit jq
+            NEW_FABRIC=$(echo "$GAME_VERSIONS" | jq --arg loader "$LOADER_VERSION" --arg api "$API_VERSION" '
+              map({
+                version: .version,
+                buildId: $loader,
+                fabricAPIVersion: $api
+              })
+            ')
+            echo "Generated NEW_FABRIC: $NEW_FABRIC"
             
             NEW_VERSIONS=$(echo "$CURRENT_FABRIC $NEW_FABRIC" | jq -s '.[1] - .[0]')
             
