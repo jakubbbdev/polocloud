@@ -193,8 +193,17 @@ jobs:
             # Erstelle neue Fabric Versionen
             NEW_FABRIC="[]"
             for game_version in $(echo "$GAME_VERSIONS" | jq -r '.[].version'); do
+              echo "Processing game version: $game_version"
               NEW_VERSION="{\"version\": \"$game_version\", \"buildId\": \"$LOADER_VERSION\", \"fabricAPIVersion\": \"$API_VERSION\"}"
-              NEW_FABRIC=$(echo "$NEW_FABRIC $NEW_VERSION" | jq -s '.[0] + [.[1]]')
+              echo "New version object: $NEW_VERSION"
+              
+              # Robuste jq-Verarbeitung
+              if [ "$NEW_FABRIC" = "[]" ]; then
+                NEW_FABRIC="[$NEW_VERSION]"
+              else
+                NEW_FABRIC=$(echo "$NEW_FABRIC" | jq ". + [$NEW_VERSION]")
+              fi
+              echo "Updated NEW_FABRIC: $NEW_FABRIC"
             done
             
             NEW_VERSIONS=$(echo "$CURRENT_FABRIC $NEW_FABRIC" | jq -s '.[1] - .[0]')
