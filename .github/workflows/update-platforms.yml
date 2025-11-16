@@ -33,10 +33,10 @@ jobs:
           NEW_VERSIONS="[]"
           for version in $(echo "$PAPER_VERSIONS" | jq -r '.[]'); do
             echo "Checking version: $version"
-            BUILD_ID=$(curl -s "https://api.papermc.io/v2/projects/paper/versions/$version" | jq '.builds | max')
+            BUILD_ID=$(curl -s "https://api.papermc.io/v2/projects/paper/versions/$version" | jq -r 'if .builds == null or (.builds | length) == 0 then empty else (.builds | max) end')
             echo "Latest build for $version: $BUILD_ID"
             
-            if [ "$BUILD_ID" != "null" ]; then
+            if [ -n "$BUILD_ID" ] && [ "$BUILD_ID" != "null" ] && [ "$BUILD_ID" != "" ]; then
               SHOULD_ADD=$(echo "$CURRENT_PAPER" | jq --arg v "$version" --arg b "$BUILD_ID" '
                 if length == 0 then true
                 else
@@ -86,10 +86,10 @@ jobs:
           NEW_VERSIONS="[]"
           for version in $(echo "$VELOCITY_VERSIONS" | jq -r '.[]'); do
             echo "Checking version: $version"
-            BUILD_ID=$(curl -s "https://api.papermc.io/v2/projects/velocity/versions/$version" | jq '.builds | max')
+            BUILD_ID=$(curl -s "https://api.papermc.io/v2/projects/velocity/versions/$version" | jq -r 'if .builds == null or (.builds | length) == 0 then empty else (.builds | max) end')
             echo "Latest build for $version: $BUILD_ID"
             
-            if [ "$BUILD_ID" != "null" ]; then
+            if [ -n "$BUILD_ID" ] && [ "$BUILD_ID" != "null" ] && [ "$BUILD_ID" != "" ]; then
               SHOULD_ADD=$(echo "$CURRENT_VELOCITY" | jq --arg v "$version" --arg b "$BUILD_ID" '
                 if length == 0 then true
                 else
@@ -140,13 +140,14 @@ jobs:
           for version in $(echo "$FOLIA_VERSIONS" | jq -r '.[]'); do
             echo "Checking version: $version"
             BUILD_DATA=$(curl -s "https://api.papermc.io/v2/projects/folia/versions/$version")
-            BUILD_ID=$(echo "$BUILD_DATA" | jq '.builds | max')
+            BUILD_ID=$(echo "$BUILD_DATA" | jq -r 'if .builds == null or (.builds | length) == 0 then empty else (.builds | max) end')
             echo "Latest build for $version: $BUILD_ID"
             
-            HASH=$(curl -s "https://api.papermc.io/v2/projects/folia/versions/$version/builds/$BUILD_ID" | jq -r '.downloads.application.sha256 // empty')
-            echo "Hash for $version build $BUILD_ID: $HASH"
-            
-            if [ "$BUILD_ID" != "null" ] && [ -n "$HASH" ]; then
+            if [ -n "$BUILD_ID" ] && [ "$BUILD_ID" != "null" ] && [ "$BUILD_ID" != "" ]; then
+              HASH=$(curl -s "https://api.papermc.io/v2/projects/folia/versions/$version/builds/$BUILD_ID" | jq -r '.downloads.application.sha256 // empty')
+              echo "Hash for $version build $BUILD_ID: $HASH"
+              
+              if [ -n "$HASH" ]; then
               SHOULD_ADD=$(echo "$CURRENT_FOLIA" | jq --arg v "$version" --arg b "$BUILD_ID" '
                 if length == 0 then true
                 else
@@ -165,6 +166,7 @@ jobs:
               else
                 CURRENT_BUILD=$(echo "$CURRENT_FOLIA" | jq -r --arg v "$version" 'if length == 0 then "0" else (map(select(.version == $v)) | first | .buildId // "0") // "0" end')
                 echo "Version $version build $BUILD_ID already exists or is older (current: $CURRENT_BUILD)"
+              fi
               fi
             fi
           done
@@ -200,10 +202,10 @@ jobs:
             NEW_VERSIONS="[]"
             for version in $(echo "$PURPUR_VERSIONS" | jq -r '.[]'); do
               echo "Checking version: $version"
-              BUILD_ID=$(curl -s "https://api.purpurmc.org/v2/purpur/$version" | jq '.builds | max')
+              BUILD_ID=$(curl -s "https://api.purpurmc.org/v2/purpur/$version" | jq -r 'if .builds == null or (.builds | length) == 0 then empty else (.builds | max) end')
               echo "Latest build for $version: $BUILD_ID"
               
-              if [ "$BUILD_ID" != "null" ]; then
+              if [ -n "$BUILD_ID" ] && [ "$BUILD_ID" != "null" ] && [ "$BUILD_ID" != "" ]; then
                 SHOULD_ADD=$(echo "$CURRENT_PURPUR" | jq --arg v "$version" --arg b "$BUILD_ID" '
                   if length == 0 then true
                   else
@@ -254,10 +256,10 @@ jobs:
           NEW_VERSIONS="[]"
           for version in $(echo "$WATERFALL_VERSIONS" | jq -r '.[]'); do
             echo "Checking version: $version"
-            BUILD_ID=$(curl -s "https://api.papermc.io/v2/projects/waterfall/versions/$version" | jq '.builds | max')
+            BUILD_ID=$(curl -s "https://api.papermc.io/v2/projects/waterfall/versions/$version" | jq -r 'if .builds == null or (.builds | length) == 0 then empty else (.builds | max) end')
             echo "Latest build for $version: $BUILD_ID"
             
-            if [ "$BUILD_ID" != "null" ]; then
+            if [ -n "$BUILD_ID" ] && [ "$BUILD_ID" != "null" ] && [ "$BUILD_ID" != "" ]; then
               SHOULD_ADD=$(echo "$CURRENT_WATERFALL" | jq --arg v "$version" --arg b "$BUILD_ID" '
                 if length == 0 then true
                 else
@@ -368,10 +370,10 @@ jobs:
           NEW_VERSIONS="[]"
           for version in $(echo "$LEAF_VERSIONS" | jq -r '.[]'); do
             echo "Checking version: $version"
-            BUILD_ID=$(curl -s "https://api.leafmc.one/v2/projects/leaf/versions/$version" | jq '.builds | max')
+            BUILD_ID=$(curl -s "https://api.leafmc.one/v2/projects/leaf/versions/$version" | jq -r 'if .builds == null or (.builds | length) == 0 then empty else (.builds | max) end')
             echo "Latest build for $version: $BUILD_ID"
             
-            if [ "$BUILD_ID" != "null" ]; then
+            if [ -n "$BUILD_ID" ] && [ "$BUILD_ID" != "null" ] && [ "$BUILD_ID" != "" ]; then
               SHOULD_ADD=$(echo "$CURRENT_LEAF" | jq --arg v "$version" --arg b "$BUILD_ID" '
                 if length == 0 then true
                 else
