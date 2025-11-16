@@ -40,7 +40,7 @@ jobs:
               SHOULD_ADD=$(echo "$CURRENT_PAPER" | jq --arg v "$version" --arg b "$BUILD_ID" '
                 if length == 0 then true
                 else
-                  (.[] | select(.version == $v) | .buildId // 0) as $current |
+                  (map(select(.version == $v)) | first | .buildId // 0) as $current |
                   if $current == 0 then true
                   else ($b | tonumber) > ($current | tonumber)
                   end
@@ -93,7 +93,7 @@ jobs:
               SHOULD_ADD=$(echo "$CURRENT_VELOCITY" | jq --arg v "$version" --arg b "$BUILD_ID" '
                 if length == 0 then true
                 else
-                  (.[] | select(.version == $v) | .buildId // 0) as $current |
+                  (map(select(.version == $v)) | first | .buildId // 0) as $current |
                   if $current == 0 then true
                   else ($b | tonumber) > ($current | tonumber)
                   end
@@ -150,7 +150,7 @@ jobs:
               SHOULD_ADD=$(echo "$CURRENT_FOLIA" | jq --arg v "$version" --arg b "$BUILD_ID" '
                 if length == 0 then true
                 else
-                  (.[] | select(.version == $v) | .buildId // 0) as $current |
+                  (map(select(.version == $v)) | first | .buildId // 0) as $current |
                   if $current == 0 then true
                   else ($b | tonumber) > ($current | tonumber)
                   end
@@ -207,7 +207,7 @@ jobs:
                 SHOULD_ADD=$(echo "$CURRENT_PURPUR" | jq --arg v "$version" --arg b "$BUILD_ID" '
                   if length == 0 then true
                   else
-                    (.[] | select(.version == $v) | .buildId // 0) as $current |
+                    (map(select(.version == $v)) | first | .buildId // 0) as $current |
                     if $current == 0 then true
                     else ($b | tonumber) > ($current | tonumber)
                     end
@@ -261,7 +261,7 @@ jobs:
               SHOULD_ADD=$(echo "$CURRENT_WATERFALL" | jq --arg v "$version" --arg b "$BUILD_ID" '
                 if length == 0 then true
                 else
-                  (.[] | select(.version == $v) | .buildId // 0) as $current |
+                  (map(select(.version == $v)) | first | .buildId // 0) as $current |
                   if $current == 0 then true
                   else ($b | tonumber) > ($current | tonumber)
                   end
@@ -322,7 +322,7 @@ jobs:
               SHOULD_ADD=$(echo "$CURRENT_LIMBO" | jq --arg v "$VERSION" --arg b "$BUILD_NUMBER" '
                 if length == 0 then true
                 else
-                  (.[] | select(.version == $v) | .buildId // 0) as $current |
+                  (map(select(.version == $v)) | first | .buildId // 0) as $current |
                   if $current == 0 then true
                   else ($b | tonumber) > ($current | tonumber)
                   end
@@ -375,7 +375,7 @@ jobs:
               SHOULD_ADD=$(echo "$CURRENT_LEAF" | jq --arg v "$version" --arg b "$BUILD_ID" '
                 if length == 0 then true
                 else
-                  (.[] | select(.version == $v) | .buildId // 0) as $current |
+                  (map(select(.version == $v)) | first | .buildId // 0) as $current |
                   if $current == 0 then true
                   else ($b | tonumber) > ($current | tonumber)
                   end
