@@ -17,8 +17,40 @@
   ],
   "versions": [
     {
+      "version": "26.2",
+      "buildId": 108
+    },
+    {
+      "version": "26.1.2",
+      "buildId": 3
+    },
+    {
+      "version": "1.21.8",
+      "buildId": 175
+    },
+    {
       "version": "1.21.8",
       "buildId": "139"
+    },
+    {
+      "version": "1.21.7",
+      "buildId": 53
+    },
+    {
+      "version": "1.21.6",
+      "buildId": 29
+    },
+    {
+      "version": "1.21.5",
+      "buildId": 68
+    },
+    {
+      "version": "1.21.4",
+      "buildId": 525
+    },
+    {
+      "version": "1.21.11",
+      "buildId": 178
     }
   ]
 }
